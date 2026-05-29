@@ -1,0 +1,305 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neon: #CCFF00;
+  --color-neon-dim: #99cc00;
+  --color-neon-glow: rgba(204, 255, 0, 0.15);
+  --color-neon-glow-strong: rgba(204, 255, 0, 0.3);
+  --color-dark-950: #030303;
+  --color-dark-900: #0a0a0a;
+  --color-dark-800: #111111;
+  --color-dark-700: #1a1a1a;
+  --color-dark-600: #222222;
+  --color-dark-500: #333333;
+  --color-glass: rgba(255, 255, 255, 0.04);
+  --color-glass-border: rgba(255, 255, 255, 0.08);
+  --color-glass-hover: rgba(255, 255, 255, 0.08);
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+/* Base styles — Tailwind v4 preflight handles *, margin, padding, box-sizing resets
+   inside @layer base. Adding them un-layered here would override all utility classes. */
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(204, 255, 0, 0.3) transparent;
+}
+
+body {
+  font-family: var(--font-body);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* ========== DARK THEME (default) ========== */
+html.dark body {
+  background-color: var(--color-dark-950);
+  color: #ffffff;
+}
+
+/* ========== LIGHT THEME ========== */
+html.light body {
+  background-color: #ffffff;
+  color: #2a2a3e;
+}
+
+/* Light theme section backgrounds */
+html.light .bg-dark-950,
+html.light .bg-dark-900 {
+  background-color: #f5f5f7;
+}
+
+html.light .bg-dark-900 {
+  background-color: #f0f0f3;
+}
+
+html.light .text-white {
+  color: #1a1a2e;
+}
+
+html.light .text-white\/40 {
+  color: #8a8a9e;
+}
+
+html.light .text-white\/30 {
+  color: #a9a9ba;
+}
+
+html.light .text-white\/20 {
+  color: #c8c8d4;
+}
+
+html.light .text-white\/60 {
+  color: #4a4a62;
+}
+
+html.light .text-white\/70 {
+  color: #3a3a52;
+}
+
+html.light .border-white\/5 {
+  border-color: rgba(26, 26, 46, 0.08);
+}
+
+/* Light theme overrides for gradient text */
+html.light .text-gradient-neon {
+  background: linear-gradient(135deg, #3d7a0a 0%, #4a8c10 50%, #3d7a0a 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Light theme glass card */
+html.light .glass-card {
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+html.light .glass-card:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(74, 124, 16, 0.25);
+  box-shadow: 0 8px 24px rgba(74, 124, 16, 0.08),
+              0 0 0 1px rgba(74, 124, 16, 0.1);
+}
+
+/* Light theme grid background */
+html.light .grid-bg {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Light theme scrollbar */
+html.light {
+  scrollbar-color: rgba(74, 124, 16, 0.25) transparent;
+}
+
+html.light ::-webkit-scrollbar-thumb {
+  background: rgba(74, 124, 16, 0.15);
+}
+
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(74, 124, 16, 0.3);
+}
+
+html.light ::selection {
+  background: rgba(74, 124, 16, 0.15);
+  color: #1a1a2e;
+}
+
+/* Light theme nav link hover */
+html.light .text-gray-600 {
+  color: #4a4a62;
+}
+
+html.light .bg-gray-50 {
+  background-color: #ffffff;
+}
+
+html.light .bg-gray-100 {
+  background-color: #f5f5f7;
+}
+
+html.light .bg-gray-200 {
+  background-color: #ececf0;
+}
+
+/* Custom scrollbar for webkit */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(204, 255, 0, 0.25);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(204, 255, 0, 0.4);
+}
+
+/* Selection color */
+::selection {
+  background: rgba(204, 255, 0, 0.3);
+  color: #ffffff;
+}
+
+/* Gradient text utility */
+.text-gradient-neon {
+  background: linear-gradient(135deg, #CCFF00 0%, #88ee00 50%, #CCFF00 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Glassmorphism card */
+.glass-card {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(204, 255, 0, 0.2);
+  box-shadow: 0 8px 32px rgba(204, 255, 0, 0.08),
+              0 0 0 1px rgba(204, 255, 0, 0.1);
+}
+
+/* Glow effects */
+.glow-neon {
+  box-shadow: 0 0 20px rgba(204, 255, 0, 0.15),
+              0 0 60px rgba(204, 255, 0, 0.05);
+}
+
+.glow-neon-strong {
+  box-shadow: 0 0 30px rgba(204, 255, 0, 0.25),
+              0 0 80px rgba(204, 255, 0, 0.1);
+}
+
+/* Animated gradient border */
+.gradient-border {
+  position: relative;
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(135deg, rgba(204, 255, 0, 0.3), transparent, rgba(204, 255, 0, 0.1));
+  border-radius: inherit;
+  z-index: -1;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1px;
+}
+
+/* Animated grid background */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* Noise texture overlay */
+.noise-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Pulse animation for play button */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Float animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 6s ease-in-out 2s infinite;
+}
+
+.animate-float-slow {
+  animation: float 8s ease-in-out 1s infinite;
+}
+
+/* Subtle rotate animation */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 30s linear infinite;
+}
+
+/* Theme transition for all elements */
+html.dark *,
+html.light * {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Prevent transition on animations */
+.animate-float,
+.animate-float-delayed,
+.animate-float-slow,
+.animate-spin-slow,
+.pulse-ring {
+  transition: none !important;
+}
