@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { Play, ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
 
 const containerVariants = {
@@ -86,7 +87,7 @@ export default function Hero() {
       )}
 
       {/* Hero Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
+      <div className="relative z-10 max-w-7xl mx-auto px-6 w-full flex flex-col items-center min-h-screen justify-center">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -107,7 +108,7 @@ export default function Hero() {
           {/* Heading */}
           <motion.h1
             variants={fadeSlideUp}
-            className="mb-6 font-[Outfit] text-5xl font-bold leading-tight md:text-7xl lg:text-8xl"
+            className="mb-6 font-[Outfit] text-4xl font-bold leading-tight sm:text-5xl md:text-7xl lg:text-8xl"
           >
             <span className={isDark ? "text-white" : "text-[#1e1b4b]"}>
               AI-Powered Drone
@@ -120,7 +121,7 @@ export default function Hero() {
           {/* Description */}
           <motion.p
             variants={fadeSlideUp}
-            className={`mb-12 max-w-4xl text-lg leading-relaxed md:text-xl ${
+            className={`mb-12 max-w-4xl text-base leading-relaxed sm:text-lg md:text-xl ${
               isDark ? "text-white/60" : "text-gray-500"
             }`}
           >
@@ -135,9 +136,9 @@ export default function Hero() {
             variants={fadeSlideUp}
             className="flex flex-col items-center gap-4 sm:flex-row"
           >
-            <a
-              href="#solutions"
-              className={`group inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-semibold transition-all duration-300 ${
+            <Link
+              to="/products#industry-solutions"
+              className={`group inline-flex items-center gap-2 rounded-full px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base font-semibold transition-all duration-300 ${
                 isDark
                   ? "bg-neon text-dark-950 hover:shadow-xl hover:shadow-neon/30"
                   : "bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-xl hover:shadow-emerald-600/30"
@@ -158,11 +159,11 @@ export default function Hero() {
                   d="M13 7l5 5m0 0l-5 5m5-5H6"
                 />
               </svg>
-            </a>
+            </Link>
 
             <a
               href="#demo"
-              className={`group inline-flex items-center gap-3 rounded-full border px-8 py-4 text-base transition-all duration-300 ${
+              className={`group inline-flex items-center gap-3 rounded-full border px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base transition-all duration-300 ${
                 isDark
                   ? "border-white/20 text-white hover:bg-white/5"
                   : "border-gray-300 text-gray-700 hover:bg-gray-100 hover:border-gray-400"
@@ -185,38 +186,38 @@ export default function Hero() {
             </a>
           </motion.div>
         </motion.div>
-      </div>
 
-      {/* Scroll Indicator */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          delay: 1.5,
-          duration: 0.8,
-        }}
-        className="absolute bottom-10 left-1/2 z-10 flex -translate-x-1/2 flex-col items-center gap-2"
-      >
-        <span className={`text-xs uppercase tracking-[0.2em] ${
-          isDark ? "text-white/30" : "text-gray-400"
-        }`}>
-          Scroll to explore
-        </span>
-
+        {/* Scroll Indicator — in flow, not absolute */}
         <motion.div
-          animate={{ y: [0, 8, 0] }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut",
+            delay: 1.5,
+            duration: 0.8,
           }}
+          className="mt-8 sm:mt-12 pb-6 flex flex-col items-center gap-2 shrink-0"
         >
-          <ChevronDown
-            size={20}
-            className={isDark ? "text-white/30" : "text-gray-400"}
-          />
+          <span className={`text-xs uppercase tracking-[0.2em] ${
+            isDark ? "text-white/30" : "text-gray-400"
+          }`}>
+            Scroll to explore
+          </span>
+
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            <ChevronDown
+              size={20}
+              className={isDark ? "text-white/30" : "text-gray-400"}
+            />
+          </motion.div>
         </motion.div>
-      </motion.div>
+      </div>
     </section>
   );
 }

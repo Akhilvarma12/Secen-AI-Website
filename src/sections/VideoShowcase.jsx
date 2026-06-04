@@ -10,7 +10,7 @@ export default function VideoShowcase() {
   const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
 
   return (
-    <section className={`relative py-16 md:py-20 overflow-hidden ${
+    <section id="demo" className={`relative py-16 md:py-20 overflow-hidden ${
       isDark ? 'bg-dark-900' : 'bg-[#f5f5f7]'
     }`}>
       {/* Subtle grid background */}

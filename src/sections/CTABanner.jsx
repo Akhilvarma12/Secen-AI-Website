@@ -83,7 +83,7 @@ export default function CTABanner() {
         {/* CTA Buttons */}
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <motion.a
-            href="#contact"
+            href="/contact"
             className={`inline-flex cursor-pointer items-center gap-2 rounded-full px-8 py-4 font-semibold transition-all ${
               isDark
                 ? 'bg-neon text-dark-950 hover:shadow-xl hover:shadow-neon/30'
