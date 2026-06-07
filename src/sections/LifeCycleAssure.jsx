@@ -1,4 +1,5 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import {
   MapPin, Microscope, MessageSquare, HeartPulse,
@@ -166,9 +167,10 @@ function DetailModal({ step, isDark, onClose }) {
   if (!step) return null;
   const Icon = step.icon;
 
-  return (
+  return createPortal(
     <motion.div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 flex items-center justify-center p-4"
+      style={{ zIndex: 99999 }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -185,7 +187,7 @@ function DetailModal({ step, isDark, onClose }) {
 
       {/* Modal */}
       <motion.div
-        className={`relative z-10 w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-3xl ${
+        className={`relative z-10 w-full max-w-lg max-h-[85vh] overflow-y-auto no-scrollbar rounded-3xl ${
           isDark
             ? 'bg-dark-800 border border-white/10 shadow-2xl shadow-black/40'
             : 'bg-white border border-gray-200 shadow-2xl shadow-black/10'
@@ -309,7 +311,8 @@ function DetailModal({ step, isDark, onClose }) {
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 
@@ -318,22 +321,26 @@ function DetailModal({ step, isDark, onClose }) {
    Labels positioned around the orbital ring
    ═══════════════════════════════════════════ */
 
+// LifecycleFlowchart — fixed label positioning to match reference design
+// Drop-in replacement for the LifecycleFlowchart function in your codebase.
+// Props: isDark, onStepClick, activeStep (same as before)
+
 function LifecycleFlowchart({ isDark, onStepClick, activeStep }) {
   const svgSize = 700;
   const center = svgSize / 2;
-  const radius = 195;
-  const iconPctSize = 8.5; // icon circle as % of container width
+  const radius = 220;
+  const iconSize = 56; // px-equivalent in SVG units
+  const hubSize = 110;
 
   const getNodePosition = (index) => {
     const angle = (index * 360) / 7 - 90;
     const rad = (angle * Math.PI) / 180;
     const nx = center + radius * Math.cos(rad);
     const ny = center + radius * Math.sin(rad);
-    return { nx, ny, rad };
+    return { nx, ny, rad, angle };
   };
 
-  // Compute label position at a larger radius in SVG coords
-  // and determine alignment based on which side of the circle
+  // Compute label anchor + alignment for each step
   const getLabelLayout = (index) => {
     const angle = (index * 360) / 7 - 90;
     const rad = (angle * Math.PI) / 180;
@@ -342,237 +349,286 @@ function LifecycleFlowchart({ isDark, onStepClick, activeStep }) {
     const dx = nx - center;
     const dy = ny - center;
 
-    // Label is placed further outward from center
-    const labelDist = 55; // SVG units further out from the icon
+    const labelDist = 55;
     const lx = nx + labelDist * Math.cos(rad);
     const ly = ny + labelDist * Math.sin(rad);
-    const lxPct = (lx / svgSize) * 100;
-    const lyPct = (ly / svgSize) * 100;
 
-    // Determine alignment
-    const isNearVertical = Math.abs(dx) < radius * 0.2;
+    const isNearVertical = Math.abs(dx) < radius * 0.25;
+    const isNearBottom = dy > radius * 0.6 && Math.abs(dx) < radius * 0.8;
 
-let align, transform;
+    let anchor, yOffset, labelY;
 
-if (isNearVertical && dy < 0) {
-  // Top
-  align = 'center';
-  transform = 'translate(-50%, -120%)';
-} else if (isNearVertical && dy > 0) {
-  // Bottom
-  align = 'center';
-  transform = 'translate(-50%, 20%)';
-} else if (dx > 0) {
-  // Right side
-  align = 'left';
-  transform = 'translate(15px, -50%)';
-} else {
-  // Left side
-  align = 'right';
-  transform = 'translate(calc(-100% - 15px), -50%)';
-}
+    if (isNearVertical && dy < 0) {
+      anchor = 'middle';
+      yOffset = -12;
+      labelY = ly;
+    } else if (isNearVertical && dy > 0) {
+      anchor = 'middle';
+      yOffset = 12;
+      labelY = ly;
+    } else if (isNearBottom) {
+      anchor = 'middle';
+      yOffset = 12;
+      labelY = ly;
+    } else if (dx > 0) {
+      // Right side — keep label vertically centered with icon
+      anchor = 'start';
+      yOffset = 0;
+      labelY = ny;
+    } else {
+      // Left side — keep label vertically centered with icon
+      anchor = 'end';
+      yOffset = 0;
+      labelY = ny;
+    }
 
-    return { lxPct, lyPct, align, transform };
+    return { lx, ly: labelY, anchor, yOffset };
   };
 
   return (
-    <div className="relative mx-auto" style={{ maxWidth: 650 }}>
-      <div className="relative w-full" style={{ paddingBottom: '100%' }}>
-        <div className="absolute inset-0 overflow-visible">
-          {/* SVG rings and connection lines */}
-          <svg
-            viewBox={`0 0 ${svgSize} ${svgSize}`}
-            className="absolute inset-0 w-full h-full"
-            style={{ zIndex: 1, overflow: 'visible' }}
-          >
-            <defs>
-              <linearGradient id="lcOrbitalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.35" />
-                <stop offset="50%" stopColor="#a78bfa" stopOpacity="0.2" />
-                <stop offset="100%" stopColor="#f472b6" stopOpacity="0.35" />
-              </linearGradient>
-              <linearGradient id="lcOrbitalGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity="0.1" />
-                <stop offset="100%" stopColor="#f472b6" stopOpacity="0.1" />
-              </linearGradient>
-            </defs>
+    <div className="relative mx-auto" style={{ maxWidth: 850 }}>
+      <svg
+        viewBox={`0 0 ${svgSize} ${svgSize}`}
+        className="w-full h-auto"
+        style={{ overflow: 'visible' }}
+      >
+        <defs>
+          <linearGradient id="lcOrbitalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.35" />
+            <stop offset="50%" stopColor="#a78bfa" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#f472b6" stopOpacity="0.35" />
+          </linearGradient>
+          <linearGradient id="lcOrbitalGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#6366f1" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="#f472b6" stopOpacity="0.1" />
+          </linearGradient>
+        </defs>
 
-            {/* Outer decorative ring */}
-            <circle
-              cx={center} cy={center} r={radius + 45}
+        {/* Outer decorative ring */}
+        <circle
+          cx={center} cy={center} r={radius + 40}
+          fill="none"
+          stroke={isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'}
+          strokeWidth="1"
+        />
+
+        {/* Main orbital ring */}
+        <motion.circle
+          cx={center} cy={center} r={radius}
+          fill="none" stroke="url(#lcOrbitalGrad)"
+          strokeWidth="2" strokeDasharray="8 5"
+          initial={{ rotate: 0 }}
+          animate={{ rotate: 360 }}
+          transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
+          style={{ transformOrigin: `${center}px ${center}px` }}
+        />
+
+        {/* Inner decorative ring */}
+        <circle
+          cx={center} cy={center} r={100}
+          fill="none" stroke="url(#lcOrbitalGrad2)" strokeWidth="1"
+        />
+
+        {/* Connection lines from center to each node */}
+        {lifecycleSteps.map((step, i) => {
+          const { nx, ny } = getNodePosition(i);
+          return (
+            <motion.line
+              key={step.id}
+              x1={center} y1={center} x2={nx} y2={ny}
+              stroke={isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}
+              strokeWidth="1" strokeDasharray="4 6"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ delay: 0.4 + i * 0.08, duration: 0.6 }}
+            />
+          );
+        })}
+
+        {/* Sequential arcs between adjacent nodes */}
+        {lifecycleSteps.map((step, i) => {
+          const next = (i + 1) % 7;
+          const { nx: x1, ny: y1 } = getNodePosition(i);
+          const { nx: x2, ny: y2 } = getNodePosition(next);
+          const mx = (x1 + x2) / 2 + (center - (x1 + x2) / 2) * 0.15;
+          const my = (y1 + y2) / 2 + (center - (y1 + y2) / 2) * 0.15;
+          return (
+            <motion.path
+              key={`arc-${step.id}`}
+              d={`M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`}
               fill="none"
-              stroke={isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'}
-              strokeWidth="1"
+              stroke={isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}
+              strokeWidth="1.5" strokeDasharray="4 4"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ delay: 0.8 + i * 0.1, duration: 0.6 }}
             />
+          );
+        })}
 
-            {/* Main orbital ring */}
-            <motion.circle
-              cx={center} cy={center} r={radius}
-              fill="none" stroke="url(#lcOrbitalGrad)"
-              strokeWidth="2" strokeDasharray="8 5"
-              initial={{ rotate: 0 }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 80, repeat: Infinity, ease: 'linear' }}
-              style={{ transformOrigin: `${center}px ${center}px` }}
-            />
-
-            {/* Inner decorative ring */}
-            <circle
-              cx={center} cy={center} r={90}
-              fill="none" stroke="url(#lcOrbitalGrad2)" strokeWidth="1"
-            />
-
-            {/* Connection lines from center to each node */}
-            {lifecycleSteps.map((step, i) => {
-              const { nx, ny } = getNodePosition(i);
-              return (
-                <motion.line
-                  key={step.id}
-                  x1={center} y1={center} x2={nx} y2={ny}
-                  stroke={isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}
-                  strokeWidth="1" strokeDasharray="4 6"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ delay: 0.4 + i * 0.08, duration: 0.6 }}
-                />
-              );
-            })}
-
-            {/* Sequential arcs between adjacent nodes */}
-            {lifecycleSteps.map((step, i) => {
-              const next = (i + 1) % 7;
-              const { nx: x1, ny: y1 } = getNodePosition(i);
-              const { nx: x2, ny: y2 } = getNodePosition(next);
-              const mx = (x1 + x2) / 2 + (center - (x1 + x2) / 2) * 0.15;
-              const my = (y1 + y2) / 2 + (center - (y1 + y2) / 2) * 0.15;
-              return (
-                <motion.path
-                  key={`arc-${step.id}`}
-                  d={`M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`}
-                  fill="none"
-                  stroke={isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}
-                  strokeWidth="1.5" strokeDasharray="4 4"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ delay: 0.8 + i * 0.1, duration: 0.6 }}
-                />
-              );
-            })}
-          </svg>
-
-          {/* Center hub */}
-          <motion.div
-            className={`absolute rounded-full flex flex-col items-center justify-center text-center ${
-              isDark
-                ? 'bg-gradient-to-br from-dark-700 to-dark-800 border border-white/10 shadow-2xl shadow-black/30'
-                : 'bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-2xl shadow-gray-200/50'
-            }`}
-            style={{
-              width: '15%', height: '15%',
-              left: '50%', top: '50%',
-              transform: 'translate(-50%, -50%)',
-              zIndex: 10,
-            }}
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3, type: 'spring', damping: 15 }}
+        {/* Center hub via foreignObject — perfectly centered in SVG coords */}
+        <motion.g
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.3, type: 'spring', damping: 15 }}
+          style={{ transformOrigin: `${center}px ${center}px` }}
+        >
+          <foreignObject
+            x={center - hubSize / 2}
+            y={center - hubSize / 2}
+            width={hubSize}
+            height={hubSize}
           >
-            <Sprout
-              className={`mb-1 ${isDark ? 'text-neon' : 'text-emerald-600'}`}
-              style={{ width: '22%', height: '22%', minWidth: 16, minHeight: 16 }}
-            />
-            <span className={`font-[Outfit] font-bold leading-tight ${isDark ? 'text-white' : 'text-[#1e1b4b]'}`}
-              style={{ fontSize: 'clamp(8px, 1.5vw, 13px)' }}>Life Cycle</span>
-            <span className={`font-[Outfit] font-bold leading-tight ${isDark ? 'text-white' : 'text-[#1e1b4b]'}`}
-              style={{ fontSize: 'clamp(8px, 1.5vw, 13px)' }}>Assure</span>
-            <span className={`tracking-wider uppercase ${isDark ? 'text-white/30' : 'text-gray-400'}`}
-              style={{ fontSize: 'clamp(5px, 0.8vw, 8px)', marginTop: 2 }}>AI-Powered</span>
-          </motion.div>
+            <div
+              xmlns="http://www.w3.org/1999/xhtml"
+              className={`w-full h-full rounded-full flex flex-col items-center justify-center text-center ${
+                isDark
+                  ? 'bg-gradient-to-br from-dark-700 to-dark-800 border border-white/10 shadow-2xl shadow-black/30'
+                  : 'bg-gradient-to-br from-white to-gray-50 border border-gray-200 shadow-2xl shadow-gray-200/50'
+              }`}
+            >
+              <Sprout
+                className={`mb-1 ${isDark ? 'text-neon' : 'text-emerald-600'}`}
+                style={{ width: 22, height: 22 }}
+              />
+              <span className={`font-[Outfit] text-[13px] font-bold leading-tight ${isDark ? 'text-white' : 'text-[#1e1b4b]'}`}>
+                Life Cycle
+              </span>
+              <span className={`font-[Outfit] text-[13px] font-bold leading-tight ${isDark ? 'text-white' : 'text-[#1e1b4b]'}`}>
+                Assure
+              </span>
+              <span className={`text-[7px] tracking-wider uppercase mt-0.5 ${isDark ? 'text-white/30' : 'text-gray-400'}`}>
+                AI-Powered
+              </span>
+            </div>
+          </foreignObject>
+        </motion.g>
 
-          {/* Step nodes — icon circle + label */}
-          {lifecycleSteps.map((step, i) => {
-            const { nx, ny } = getNodePosition(i);
-            const { lxPct, lyPct, align, transform: labelTransform } = getLabelLayout(i);
-            const Icon = step.icon;
-            const isActive = activeStep === step.id;
+        {/* Step nodes — icon circles + numbered badges + labels */}
+        {lifecycleSteps.map((step, i) => {
+          const { nx, ny } = getNodePosition(i);
+          const { lx, ly, anchor, yOffset } = getLabelLayout(i);
+          const Icon = step.icon;
+          const isActive = activeStep === step.id;
 
-            const xPct = (nx / svgSize) * 100;
-            const yPct = (ny / svgSize) * 100;
-
-            return (
-              <div key={step.id}>
-                {/* Icon circle */}
-                <motion.button
-                  className={`absolute rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
-                    isDark
-                      ? 'bg-dark-800 border-2 hover:border-white/20'
-                      : 'bg-white border-2 hover:border-gray-400 shadow-lg'
-                  }`}
-                  style={{
-                    width: `${iconPctSize}%`,
-                    height: `${iconPctSize}%`,
-                    left: `${xPct}%`,
-                    top: `${yPct}%`,
-                    transform: 'translate(-50%, -50%)',
-                    zIndex: 20,
-                    borderColor: isActive ? step.color
-                      : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)',
-                    boxShadow: isActive
-                      ? `0 0 24px ${step.color}30, 0 0 48px ${step.color}10`
-                      : isDark ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 15px rgba(0,0,0,0.08)',
-                  }}
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.5 + i * 0.1, type: 'spring', damping: 15 }}
-                  whileHover={{ scale: 1.12 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => onStepClick(step)}
+          return (
+            <g key={step.id}>
+              {/* Icon circle via foreignObject */}
+              <motion.g
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.5 + i * 0.1, type: 'spring', damping: 15 }}
+                style={{ transformOrigin: `${nx}px ${ny}px` }}
+              >
+                <foreignObject
+                  x={nx - iconSize / 2}
+                  y={ny - iconSize / 2}
+                  width={iconSize}
+                  height={iconSize}
+                  style={{ cursor: 'pointer', overflow: 'visible' }}
                 >
-                  <Icon size={24} style={{ color: step.color }} />
-                  <span
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full text-[9px] font-bold text-white flex items-center justify-center"
-                    style={{ backgroundColor: step.color }}
+                  <div
+                    xmlns="http://www.w3.org/1999/xhtml"
+                    className={`w-full h-full rounded-full flex items-center justify-center transition-all duration-300 ${
+                      isDark
+                        ? 'bg-dark-800 hover:border-white/20'
+                        : 'bg-white hover:border-gray-400 shadow-lg'
+                    }`}
+                    style={{
+                      border: `2px solid ${
+                        isActive ? step.color
+                          : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.1)'
+                      }`,
+                      boxShadow: isActive
+                        ? `0 0 24px ${step.color}30, 0 0 48px ${step.color}10`
+                        : isDark ? '0 4px 20px rgba(0,0,0,0.3)' : '0 4px 15px rgba(0,0,0,0.08)',
+                    }}
+                    onClick={() => onStepClick(step)}
                   >
-                    {step.id}
-                  </span>
-                </motion.button>
-
-                {/* Label — positioned at larger radius, pure percentage */}
-                <motion.div
-                  className="absolute pointer-events-none"
-                  style={{
-                    left: `${lxPct}%`,
-                    top: `${lyPct}%`,
-                    transform: labelTransform,
-                    zIndex: 15,
-                    textAlign: align,
-                  }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.7 + i * 0.1, duration: 0.5 }}
+                    <Icon size={24} style={{ color: step.color }} />
+                  </div>
+                </foreignObject>
+                {/* Number badge — rendered as SVG for perfect circle */}
+                <circle
+                  cx={nx + iconSize / 2 - 6}
+                  cy={ny - iconSize / 2 + 6}
+                  r={10}
+                  fill={step.color}
+                />
+                <text
+                  x={nx + iconSize / 2 - 6}
+                  y={ny - iconSize / 2 + 6}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fill="white"
+                  style={{ fontSize: 10, fontWeight: 700 }}
                 >
-                  <h4
-                    className={`font-[Outfit] font-semibold leading-tight whitespace-nowrap ${
-                      isDark ? 'text-white' : 'text-[#1e1b4b]'
-                    }`}
-                    style={{ fontSize: 'clamp(11px, 1.4vw, 15px)' }}
-                  >
-                    {step.title}
-                  </h4>
-                  <p
-                    className={`leading-tight mt-0.5 whitespace-nowrap ${
-                      isDark ? 'text-white/35' : 'text-gray-400'
-                    }`}
-                    style={{ fontSize: 'clamp(8px, 1vw, 11px)' }}
-                  >
-                    {step.shortDesc}
-                  </p>
-                </motion.div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+                  {step.id}
+                </text>
+              </motion.g>
+
+              {/* Label text — rendered as SVG text for perfect alignment */}
+              <motion.g
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 + i * 0.1, duration: 0.5 }}
+              >
+                {yOffset < 0 ? (
+                  <>
+                    {/* Top labels: subtitle above title, both above the icon */}
+                    <text
+                      x={lx}
+                      y={ly + yOffset + 16}
+                      textAnchor={anchor}
+                      dominantBaseline="auto"
+                      style={{ fontSize: 11 }}
+                      fill={isDark ? 'rgba(255,255,255,0.35)' : 'rgba(156,163,175,1)'}
+                    >
+                      {step.shortDesc}
+                    </text>
+                    <text
+                      x={lx}
+                      y={ly + yOffset}
+                      textAnchor={anchor}
+                      dominantBaseline="auto"
+                      className="font-[Outfit]"
+                      style={{ fontSize: 15, fontWeight: 600 }}
+                      fill={isDark ? '#ffffff' : '#1e1b4b'}
+                    >
+                      {step.title}
+                    </text>
+                  </>
+                ) : (
+                  <>
+                    {/* Bottom / side labels: title first, subtitle below */}
+                    <text
+                      x={lx}
+                      y={ly + yOffset}
+                      textAnchor={anchor}
+                      dominantBaseline={yOffset > 0 ? 'hanging' : 'middle'}
+                      className="font-[Outfit]"
+                      style={{ fontSize: 15, fontWeight: 600 }}
+                      fill={isDark ? '#ffffff' : '#1e1b4b'}
+                    >
+                      {step.title}
+                    </text>
+                    <text
+                      x={lx}
+                      y={ly + yOffset + 18}
+                      textAnchor={anchor}
+                      dominantBaseline={yOffset > 0 ? 'hanging' : 'middle'}
+                      style={{ fontSize: 11 }}
+                      fill={isDark ? 'rgba(255,255,255,0.35)' : 'rgba(156,163,175,1)'}
+                    >
+                      {step.shortDesc}
+                    </text>
+                  </>
+                )}
+              </motion.g>
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }
@@ -656,6 +712,16 @@ export default function LifeCycleAssure() {
   const sectionRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: '-80px' });
   const [selectedStep, setSelectedStep] = useState(null);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedStep) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [selectedStep]);
 
   return (
     <>
